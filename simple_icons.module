@@ -1,0 +1,124 @@
+<?php
+
+function simple_icons_init() {
+    	define('FILES_DIR', 'sites/default/files'); 
+	define('ICONS_DIR', drupal_get_path('module', 'simple_icons') . "/" . 'icons');
+}
+
+function simple_icons_icon($value, $type="png") {
+	/*************************************
+	*
+	* General purpose: return an image name corresponding to the select value
+	* For more detailed implementations this function could be changed
+	*
+	*************************************/
+	return ICONS_DIR . "/" . $value . "." . $type;
+}
+
+/**
+* Implements hook_field_formatter_info().
+*/
+function simple_icons_field_formatter_info() {
+  $info = array(
+    'simple_icons_icon' => array(
+      'label' => t('Simple Icons'), 
+      'field types' => array('list_text'),
+      'description' => t('Displays an icon instead of text for a select list.'),
+      'settings' => array(
+        'link' => 0,
+	   'wrapper' => 'div',
+      ),
+    ), 
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function simple_icons_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $element['link'] = array(
+    '#title' => t('Link to content'),
+    '#type' => 'checkbox',
+    '#default_value' => $settings['link'],
+  );
+
+  $element['wrapper'] = array(
+    '#title' => t('Wrapper'),
+    '#type' => 'select',
+    '#options' => array('div'=>'div', 'span'=>'span', 'none'=>'none'),
+    '#default_value' => $settings['wrapper'],
+  );
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function simple_icons_field_formatter_settings_summary($field, $instance, $view_mode) {
+  	$display = $instance['display'][$view_mode];
+  	$settings = $display['settings'];
+
+  	$summary = 'Link to content: ' . ($settings['link'] == 1 ? 'YES' : 'NO');
+	$summary .= '<br />Wrapper: ' . $settings['wrapper'];
+  	return $summary;
+}
+
+/**
+* Implements hook_field_formatter_view().
+*/
+function simple_icons_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+	$settings = $display['settings'];
+  	$element = array();
+	$curi = entity_uri($entity_type, $entity);
+	$content_path = $curi['path'];
+
+	  switch ($display['type']) {
+	    case 'simple_icons_icon':
+		$allowed_values = list_allowed_values($field, $instance, $entity_type, $entity);
+		 foreach ($items as $delta => $item) {
+		   if (isset($allowed_values[$item['value']])) {
+		     $alt = field_filter_xss($allowed_values[$item['value']]);
+		   }
+		   else {
+		     // If no match was found in allowed values, fall back to the key.
+		     $alt = field_filter_xss($item['value']);
+		   }
+			$val = field_filter_xss($item['value']);
+		   $element[$delta] = array(
+		     '#theme' => 'simple_icons_icon', 
+		     '#alt' => $alt, 
+		     '#icon' => simple_icons_icon($val), 
+			'#link' => $settings['link'],
+			'#cpath' => $content_path,
+			'#wrapper' => $settings['wrapper'],
+		   );
+		 }
+		 break;
+	  }
+	  return $element;
+}
+
+/**
+* Implements hook_theme().
+*/
+function simple_icons_theme() {
+  return array(
+    'simple_icons_icon' => array(
+      'template' => 'simple_icons_icon',
+      'variables' => array(
+        'alt' => NULL,
+        'icon' => NULL,
+	   'link' => NULL,
+	   'cpath' => NULL,
+	   'wrapper' => NULL,
+      ),
+	'path' => drupal_get_path('module', 'simple_icons'),
+    ),
+  );
+}
+

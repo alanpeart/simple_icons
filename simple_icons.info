@@ -1,0 +1,12 @@
+name = Simple Icons
+description = Provides a field formatter that displays select list options as icons of the same name. Put the correctly-named icons in the icons subfolder of the module folder and you're away.
+core = 7.x
+
+files[] = simple_icons.module
+
+; Information added by drupal.org packaging script on 2012-07-19
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "Simple Icons"
+datestamp = "1342687617"
+
